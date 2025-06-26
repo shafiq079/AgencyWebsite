@@ -24,7 +24,7 @@ app.use('/api/', limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'https://atelier-rho-indol.vercel.app',
   credentials: true
 }));
 

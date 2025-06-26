@@ -22,9 +22,13 @@ export default function AdminDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    checkAuth();
-    fetchProjects();
-  }, []);
+  const init = async () => {
+    await checkAuth();
+    await fetchProjects();
+  };
+  init();
+}, []);
+
 
   const checkAuth = async () => {
     if (!auth.isAuthenticated()) {
