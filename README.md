@@ -222,15 +222,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-For support, email support@yourcompany.com or create an issue in this repository.
+For support, email shafiqsheeeqi079.com or create an issue in this repository.
 
 ## 🔗 Links
-
-- [Frontend Documentation](./frontend/README.md)
-- [Backend Documentation](./backend/README.md)
+- [My Portfolio](https://shafiq-webdev.vercel.app/)
 - [Live Demo](https://your-demo-link.com)
-- [API Documentation](https://your-api-docs-link.com)
+
 
 ---
 
-**Built with ❤️ for creative agencies and digital studios**
