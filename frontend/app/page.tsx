@@ -82,8 +82,8 @@ export default function Home() {
                   </h2>
                 </div>
                 <p className="text-lg text-gray-600 leading-relaxed">
-                  We believe in the power of thoughtful design to transform businesses and 
-                  create meaningful connections. Our approach combines strategic thinking 
+                  We believe in the power of thoughtful design to transform businesses and
+                  create meaningful connections. Our approach combines strategic thinking
                   with creative excellence to deliver solutions that are both beautiful and functional.
                 </p>
                 <Link
@@ -97,7 +97,7 @@ export default function Home() {
                 </Link>
               </div>
             </AnimatedSection>
-            
+
             <AnimatedSection delay={0.2}>
               <div className="relative">
                 <img
@@ -123,8 +123,8 @@ export default function Home() {
               Our Services
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              We offer a comprehensive range of design services to help your brand 
-              stand out in today's competitive landscape.
+              We offer a comprehensive range of design services to help your brand
+              stand out in today&apos;s competitive landscape.
             </p>
           </AnimatedSection>
 
@@ -168,7 +168,7 @@ export default function Home() {
               Featured Work
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              A selection of our recent projects that showcase our commitment 
+              A selection of our recent projects that showcase our commitment
               to exceptional design and creative excellence.
             </p>
           </AnimatedSection>
@@ -224,7 +224,7 @@ export default function Home() {
               Ready to create something extraordinary?
             </h2>
             <p className="text-xl text-gray-300 mb-12 max-w-2xl mx-auto">
-              Let's collaborate to bring your vision to life with exceptional design 
+              Let&apos;s collaborate to bring your vision to life with exceptional design
               and creative excellence.
             </p>
             <Link

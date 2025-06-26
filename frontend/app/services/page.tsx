@@ -89,7 +89,7 @@ export default function Services() {
                     </div>
                     
                     <div>
-                      <h4 className="text-lg font-medium text-navy mb-4">What's Included:</h4>
+                      <h4 className="text-lg font-medium text-navy mb-4">What&apos;s Included:</h4>
                       <ul className="space-y-2">
                         {service.features.map((feature) => (
                           <li key={feature} className="flex items-center text-gray-600">
@@ -185,7 +185,7 @@ export default function Services() {
               Ready to get started?
             </h2>
             <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-              Let's discuss your project and explore how we can help bring your vision to life.
+             Let&apos;s discuss your project and explore how we can help bring your vision to life.
             </p>
             <a
               href="/contact"

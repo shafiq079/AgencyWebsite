@@ -48,8 +48,8 @@ export default function Contact() {
                     Start a Conversation
                   </h2>
                   <p className="text-lg text-gray-600 leading-relaxed mb-8">
-                    Whether you have a specific project in mind or just want to explore 
-                    possibilities, we're here to help. Let's discuss your goals and see 
+                    Whether you have a specific project in mind or just want to explore
+                    possibilities, we&apos;re here to help. Let&apos;s discuss your goals and see
                     how we can work together.
                   </p>
                 </div>

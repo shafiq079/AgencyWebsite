@@ -58,11 +58,10 @@ export default function Work() {
                 <button
                   key={category}
                   onClick={() => setFilter(category)}
-                  className={`px-6 py-3 rounded-full font-medium transition-all ${
-                    filter === category
+                  className={`px-6 py-3 rounded-full font-medium transition-all ${filter === category
                       ? 'bg-navy text-white'
                       : 'bg-white text-gray-600 hover:bg-gray-100'
-                  }`}
+                    }`}
                 >
                   {category}
                 </button>
@@ -102,8 +101,8 @@ export default function Work() {
                     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
                       <div className="relative overflow-hidden">
                         <img
-                          src={project.featuredImage.startsWith('http') 
-                            ? project.featuredImage 
+                          src={project.featuredImage.startsWith('http')
+                            ? project.featuredImage
                             : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${project.featuredImage}`
                           }
                           crossOrigin="anonymous"
@@ -117,7 +116,7 @@ export default function Work() {
                           {project.year}
                         </div>
                       </div>
-                      
+
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-copper text-sm font-medium tracking-wider uppercase">
@@ -176,10 +175,10 @@ export default function Work() {
         <div className="section-padding container-max text-center">
           <AnimatedSection>
             <h2 className="text-4xl md:text-5xl font-serif text-navy mb-6 leading-tight">
-              Let's create your next project together
+              Let&apos;s create your next project together
             </h2>
             <p className="text-lg text-gray-600 mb-12 max-w-2xl mx-auto">
-              Ready to bring your vision to life? We'd love to hear about your project 
+              Ready to bring your vision to life? We&apos;d love to hear about your project
               and explore how we can help you achieve your goals.
             </p>
             <Link

@@ -127,7 +127,7 @@ export default function About() {
         <div className="section-padding container-max">
           <AnimatedSection className="text-center max-w-4xl mx-auto">
             <blockquote className="text-3xl md:text-4xl font-serif leading-relaxed mb-8">
-              "Design is not just what it looks like and feels like. Design is how it works."
+               &quot;Design is not just what it looks like and feels like. Design is how it works.&quot;
             </blockquote>
             <cite className="text-copper text-lg font-medium">— Steve Jobs</cite>
           </AnimatedSection>
