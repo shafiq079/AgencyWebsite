@@ -4,6 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
@@ -49,7 +50,24 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static file serving for uploads
 const uploadsPath = path.resolve(__dirname, 'uploads');
-app.use('/uploads', require('cors')(), express.static(uploadsPath));
+app.use('/uploads', require('cors')({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}), express.static(uploadsPath, {
+  setHeaders: (res, path) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.set('Access-Control-Allow-Origin', '*');
+  }
+}));
 
 
 // Routes
@@ -59,6 +77,36 @@ app.use('/api/projects', projectRoutes);
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
+});
+
+// Test image serving endpoint
+app.get('/api/test-images', (req, res) => {
+  const uploadsPath = path.resolve(__dirname, 'uploads');
+  const projectsPath = path.join(uploadsPath, 'projects');
+  
+  try {
+    if (fs.existsSync(projectsPath)) {
+      const files = fs.readdirSync(projectsPath);
+      res.json({ 
+        message: 'Image directory accessible',
+        uploadsPath,
+        projectsPath,
+        fileCount: files.length,
+        files: files.slice(0, 5) // Show first 5 files
+      });
+    } else {
+      res.json({ 
+        message: 'Projects directory not found',
+        uploadsPath,
+        projectsPath
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error accessing image directory',
+      error: error.message
+    });
+  }
 });
 
 // Error handling middleware

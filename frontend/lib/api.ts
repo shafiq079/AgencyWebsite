@@ -3,22 +3,40 @@ import Cookies from 'js-cookie';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
+// Get the base URL for images (without /api)
+const getBaseUrl = (): string => {
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    // For production, extract the base URL from the API URL
+    const url = new URL(process.env.NEXT_PUBLIC_API_URL);
+    return `${url.protocol}//${url.host}`;
+  }
+  // For development
+  return 'http://localhost:5000';
+};
+
 // Utility function to construct image URLs
 export const getImageUrl = (imagePath: string): string => {
   if (!imagePath) return '';
   
   // If it's already a full URL, return as is
   if (imagePath.startsWith('http')) {
+    console.log('Image URL (already full):', imagePath);
     return imagePath;
   }
   
-  // For production, use the backend URL without /api
-  if (process.env.NEXT_PUBLIC_API_URL) {
-    return `${process.env.NEXT_PUBLIC_API_URL.replace('/api', '')}${imagePath}`;
-  }
+  // Construct the full URL using the base URL
+  const baseUrl = getBaseUrl();
+  const fullUrl = `${baseUrl}${imagePath}`;
   
-  // For development, use localhost
-  return `http://localhost:5000${imagePath}`;
+  // Debug logging
+  console.log('Image URL construction:', {
+    originalPath: imagePath,
+    baseUrl,
+    fullUrl,
+    apiUrl: process.env.NEXT_PUBLIC_API_URL
+  });
+  
+  return fullUrl;
 };
 
 // Create axios instance
