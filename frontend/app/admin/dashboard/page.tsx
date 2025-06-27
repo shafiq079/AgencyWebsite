@@ -104,24 +104,6 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-soft-white">
       <ToastContainer />
       
-      {/* Temporary Debug Section - Remove after fixing */}
-      <div className="bg-yellow-100 p-4 mb-4">
-        <h3 className="font-bold text-yellow-800">Debug Info:</h3>
-        <p>API URL: {process.env.NEXT_PUBLIC_API_URL || 'Not set'}</p>
-        <p>Sample Image URL: {getImageUrl('/uploads/projects/test.jpg')}</p>
-        <button 
-          onClick={() => {
-            console.log('Environment:', {
-              NODE_ENV: process.env.NODE_ENV,
-              NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL
-            });
-          }}
-          className="bg-blue-500 text-white px-2 py-1 rounded text-sm"
-        >
-          Log Environment
-        </button>
-      </div>
-      
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <header className="bg-white shadow-sm border-b">

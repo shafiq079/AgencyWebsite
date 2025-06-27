@@ -20,21 +20,12 @@ export const getImageUrl = (imagePath: string): string => {
   
   // If it's already a full URL (like Cloudinary), return as is
   if (imagePath.startsWith('http')) {
-    console.log('Image URL (already full):', imagePath);
     return imagePath;
   }
   
   // For local storage (development), construct the full URL
   const baseUrl = getBaseUrl();
   const fullUrl = `${baseUrl}${imagePath}`;
-  
-  // Debug logging
-  console.log('Image URL construction:', {
-    originalPath: imagePath,
-    baseUrl,
-    fullUrl,
-    apiUrl: process.env.NEXT_PUBLIC_API_URL
-  });
   
   return fullUrl;
 };
