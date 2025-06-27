@@ -4,16 +4,32 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { auth, User } from '@/lib/auth';
 import { projectsAPI } from '@/lib/api';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Testimonial } from '@/types/project';
+
+// Dynamically import ReactQuill to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill'), {
+  ssr: false,
+  loading: () => <p>Loading editor...</p>,
+});
+
+import 'react-quill/dist/quill.snow.css';
 
 export default function NewProject() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [testimonial, setTestimonial] = useState<Testimonial>({
+    name: '',
+    role: '',
+    image: '',
+    quote: ''
+  });
   const router = useRouter();
 
   const [formData, setFormData] = useState({
@@ -69,16 +85,24 @@ export default function NewProject() {
         }
       });
 
+      // Append testimonial data if provided
+      if (testimonial.name && testimonial.quote) {
+        formDataToSend.append('testimonial', JSON.stringify(testimonial));
+      }
+
       // Append image files
       selectedFiles.forEach((file) => {
         formDataToSend.append('images', file);
       });
 
-      await projectsAPI.createProject(formDataToSend);
-      toast.success('Project created successfully');
+      const response = await projectsAPI.createProject(formDataToSend);
+      console.log('Project created successfully:', response);
+      toast.success('Project created successfully!');
       router.push('/admin/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Creation failed');
+      console.error('Project creation error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create project';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -157,7 +181,7 @@ export default function NewProject() {
                   required
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
                   placeholder="Enter project title"
                 />
               </div>
@@ -172,7 +196,7 @@ export default function NewProject() {
                   required
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
                 >
                   {categories.map(cat => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -192,7 +216,7 @@ export default function NewProject() {
                   name="client"
                   value={formData.client}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
                   placeholder="Client name"
                 />
               </div>
@@ -210,7 +234,7 @@ export default function NewProject() {
                   max={new Date().getFullYear() + 1}
                   value={formData.year}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
                 />
               </div>
             </div>
@@ -226,7 +250,7 @@ export default function NewProject() {
                 rows={3}
                 value={formData.shortDescription}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors resize-none text-gray-900"
                 placeholder="Brief description for project cards (max 200 characters)"
                 maxLength={200}
               />
@@ -239,20 +263,78 @@ export default function NewProject() {
               <label htmlFor="description" className="block text-sm font-medium text-navy mb-2">
                 Full Description *
               </label>
-              <textarea
-                id="description"
-                name="description"
-                required
-                rows={8}
-                value={formData.description}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors resize-none"
-                placeholder="Detailed project description..."
-                maxLength={1000}
-              />
+              <div className="border border-gray-300 rounded-lg bg-white">
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
+                  placeholder="Write a detailed project description..."
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      [{ 'color': [] }, { 'background': [] }],
+                      ['link', 'image'],
+                      ['clean']
+                    ],
+                  }}
+                  style={{ height: '200px' }}
+                  className="text-gray-900"
+                />
+              </div>
               <p className="text-sm text-gray-500 mt-1">
-                {formData.description.length}/1000 characters
+                Use the toolbar above to format your description
               </p>
+            </div>
+
+            {/* Testimonial Section */}
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-medium text-navy mb-4">Testimonial (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-navy mb-2">
+                    Author Name
+                  </label>
+                  <input
+                    type="text"
+                    value={testimonial.name}
+                    onChange={(e) => setTestimonial(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
+                    placeholder="Client or reviewer name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-navy mb-2">
+                    Role/Company
+                  </label>
+                  <input
+                    type="text"
+                    value={testimonial.role}
+                    onChange={(e) => setTestimonial(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
+                    placeholder="CEO, Company Name"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-navy mb-2">
+                  Testimonial Quote
+                </label>
+                <textarea
+                  value={testimonial.quote}
+                  onChange={(e) => setTestimonial(prev => ({ ...prev, quote: e.target.value }))}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors resize-none text-gray-900"
+                  placeholder="What did they say about your work?"
+                  maxLength={500}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  {testimonial.quote.length}/500 characters
+                </p>
+              </div>
             </div>
 
             <div>
@@ -265,7 +347,7 @@ export default function NewProject() {
                 name="technologies"
                 value={formData.technologies}
                 onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
                 placeholder="React, Node.js, MongoDB (comma-separated)"
               />
             </div>
@@ -321,15 +403,12 @@ export default function NewProject() {
             {/* Settings */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="status" className="block text-sm font-medium text-navy mb-2">
-                  Status
-                </label>
+                <label className="block mb-2 font-medium text-navy">Status</label>
                 <select
-                  id="status"
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
+                  className="w-full border px-4 py-3 rounded-lg text-gray-900"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>

@@ -128,10 +128,11 @@ router.get('/:slug', async (req, res) => {
 // Create project
 router.post('/', auth, upload.array('images', 10), [
   body('title').isLength({ min: 1, max: 100 }).trim().escape(),
-  body('description').isLength({ min: 1, max: 1000 }).trim(),
+  body('description').isLength({ min: 1, max: 5000 }).trim(),
   body('shortDescription').isLength({ min: 1, max: 200 }).trim(),
   body('category').isIn(['Branding', 'Digital', 'Print', 'Art Direction', 'Web Design']),
-  body('year').isInt({ min: 2000, max: new Date().getFullYear() + 1 })
+  body('year').isInt({ min: 2000, max: new Date().getFullYear() + 1 }),
+  body('testimonial').optional()
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -148,8 +149,11 @@ router.post('/', auth, upload.array('images', 10), [
       client,
       year,
       status = 'draft',
-      featured = false
+      featured = false,
+      testimonial
     } = req.body;
+
+    console.log('Received testimonial:', testimonial); // Debug log
 
     const images = req.files?.map(file => ({
       url: file.path, // Cloudinary URL
@@ -159,7 +163,19 @@ router.post('/', auth, upload.array('images', 10), [
 
     const featuredImage = images.length > 0 ? images[0].url : '';
 
-    const project = new Project({
+    // Parse testimonial if provided
+    let parsedTestimonial = null;
+    if (testimonial && testimonial !== 'undefined') {
+      try {
+        parsedTestimonial = JSON.parse(testimonial);
+        console.log('Parsed testimonial:', parsedTestimonial); // Debug log
+      } catch (error) {
+        console.error('Error parsing testimonial:', error);
+        parsedTestimonial = null;
+      }
+    }
+
+    const projectData = {
       title,
       description,
       shortDescription,
@@ -171,26 +187,44 @@ router.post('/', auth, upload.array('images', 10), [
       year: parseInt(year),
       status,
       featured: featured === 'true',
+      testimonial: parsedTestimonial,
       createdBy: req.user._id
-    });
+    };
 
-    await project.save();
-    await project.populate('createdBy', 'username email');
+    console.log('Creating project with data:', projectData); // Debug log
 
-    res.status(201).json({
-      message: 'Project created successfully',
-      project
-    });
+    const project = new Project(projectData);
+
+    try {
+      await project.save();
+      await project.populate('createdBy', 'username email');
+
+      res.status(201).json({
+        message: 'Project created successfully',
+        project
+      });
+    } catch (saveError) {
+      console.error('Error saving project:', saveError);
+      res.status(500).json({ 
+        message: 'Error saving project', 
+        error: saveError.message,
+        stack: process.env.NODE_ENV === 'development' ? saveError.stack : undefined
+      });
+    }
   } catch (error) {
     console.error('Create project error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 });
 
 // Update project
 router.put('/:id', auth, upload.array('images', 10), [
   body('title').optional().isLength({ min: 1, max: 100 }).trim().escape(),
-  body('description').optional().isLength({ min: 1, max: 1000 }).trim(),
+  body('description').optional().isLength({ min: 1, max: 5000 }).trim(),
   body('shortDescription').optional().isLength({ min: 1, max: 200 }).trim(),
   body('category').optional().isIn(['Branding', 'Digital', 'Print', 'Art Direction', 'Web Design']),
   body('year').optional().isInt({ min: 2000, max: new Date().getFullYear() + 1 })
@@ -213,6 +247,15 @@ router.put('/:id', auth, upload.array('images', 10), [
         project[key] = req.body[key] === 'true';
       } else if (key === 'year') {
         project[key] = parseInt(req.body[key]);
+      } else if (key === 'testimonial') {
+        // Parse testimonial if provided
+        if (req.body[key]) {
+          try {
+            project[key] = JSON.parse(req.body[key]);
+          } catch (error) {
+            console.error('Error parsing testimonial:', error);
+          }
+        }
       } else if (req.body[key] !== undefined) {
         project[key] = req.body[key];
       }

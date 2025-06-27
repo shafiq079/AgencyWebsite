@@ -71,16 +71,14 @@ export default function ProjectDetail() {
             transition={{ duration: 1.5, ease: 'easeOut' }}
             className="w-full h-full"
           >
-            <div className="relative w-full h-96 md:h-[500px] overflow-hidden rounded-2xl">
-              <img
-                src={getImageUrl(project.featuredImage)}
-                crossOrigin="anonymous"
-                alt={project.title}
-                className="w-full h-full object-cover"
-              />
-            </div>
+            <img
+              src={getImageUrl(project.featuredImage)}
+              crossOrigin="anonymous"
+              alt={project.title}
+              className="w-full h-full object-cover"
+            />
           </motion.div>
-          <div className="absolute inset-0 bg-navy/40" />
+          <div className="absolute inset-0 bg-navy/20" />
         </div>
 
         <div className="relative z-10 text-center text-white section-padding container-max">
@@ -172,15 +170,50 @@ export default function ProjectDetail() {
               <AnimatedSection delay={0.2}>
                 <div className="prose prose-lg max-w-none">
                   <h2 className="text-3xl font-serif text-navy mb-6">About This Project</h2>
-                  <div className="text-gray-600 leading-relaxed whitespace-pre-line">
-                    {project.description}
-                  </div>
+                  <div 
+                    className="text-gray-600 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: project.description }}
+                  />
                 </div>
               </AnimatedSection>
             </div>
           </div>
         </div>
       </section>
+
+      {/* Project Testimonial */}
+      {project.testimonial && project.testimonial.name && project.testimonial.quote && (
+        <section className="py-32 bg-soft-white">
+          <div className="section-padding container-max">
+            <AnimatedSection className="text-center mb-16">
+              <h2 className="text-4xl md:text-5xl font-serif text-navy mb-6 leading-tight">
+                Client Testimonial
+              </h2>
+            </AnimatedSection>
+            
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12">
+                <div className="text-center mb-8">
+                  <div className="w-16 h-16 bg-copper/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-8 h-8 text-copper" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/>
+                    </svg>
+                  </div>
+                  <blockquote className="text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-6">
+                    "{project.testimonial.quote}"
+                  </blockquote>
+                  <div>
+                    <p className="text-lg font-semibold text-navy">{project.testimonial.name}</p>
+                    {project.testimonial.role && (
+                      <p className="text-gray-600">{project.testimonial.role}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Project Gallery */}
       {project.images && project.images.length > 0 && (

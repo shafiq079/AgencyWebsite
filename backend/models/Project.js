@@ -15,7 +15,7 @@ const projectSchema = new mongoose.Schema({
   description: {
     type: String,
     required: true,
-    maxlength: 1000
+    maxlength: 5000 // Increased for rich text content
   },
   shortDescription: {
     type: String,
@@ -64,6 +64,26 @@ const projectSchema = new mongoose.Schema({
   featured: {
     type: Boolean,
     default: false
+  },
+  testimonial: {
+    name: {
+      type: String,
+      trim: true,
+      maxlength: 100
+    },
+    role: {
+      type: String,
+      trim: true,
+      maxlength: 100
+    },
+    image: {
+      type: String
+    },
+    quote: {
+      type: String,
+      trim: true,
+      maxlength: 500
+    }
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

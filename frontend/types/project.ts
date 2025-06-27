@@ -4,6 +4,13 @@ export interface ProjectImage {
   caption?: string;
 }
 
+export interface Testimonial {
+  name: string;
+  role: string;
+  image?: string;
+  quote: string;
+}
+
 export interface Project {
   _id: string;
   title: string;
@@ -18,6 +25,7 @@ export interface Project {
   year: number;
   status: 'draft' | 'published';
   featured: boolean;
+  testimonial?: Testimonial;
   createdBy?: {
     _id: string;
     username: string;
@@ -38,4 +46,5 @@ export interface ProjectFormData {
   status: 'draft' | 'published';
   featured: boolean;
   images: File[];
+  testimonial?: Testimonial;
 }

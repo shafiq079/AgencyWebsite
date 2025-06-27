@@ -4,24 +4,39 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { auth, User } from '@/lib/auth';
 import { projectsAPI, getImageUrl } from '@/lib/api';
-import { Project } from '@/types/project';
+import { Project, Testimonial } from '@/types/project';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+
+// Dynamically import ReactQuill to avoid SSR issues
+const ReactQuill = dynamic(() => import('react-quill'), {
+  ssr: false,
+  loading: () => <p>Loading editor...</p>,
+});
+
+import 'react-quill/dist/quill.snow.css';
 
 export default function EditProject() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [project, setProject] = useState<Project | null>(null);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<string[]>([]);
-  const [existingImageIds, setExistingImageIds] = useState<string[]>([]);
   const [removedExistingImages, setRemovedExistingImages] = useState<string[]>([]);
+  const [testimonial, setTestimonial] = useState<Testimonial>({
+    name: '',
+    role: '',
+    image: '',
+    quote: ''
+  });
   const router = useRouter();
   const params = useParams();
-  const id = params.id;
+  const projectId = params.id as string;
 
   const [formData, setFormData] = useState({
     title: '',
@@ -62,14 +77,14 @@ export default function EditProject() {
   }, [router]);
 
   const fetchProject = useCallback(async () => {
-    if (!id) {
+    if (!projectId) {
       console.log('Edit page - No ID provided');
       return;
     }
     
-    console.log('Edit page - Fetching project with ID:', id);
+    console.log('Edit page - Fetching project with ID:', projectId);
     try {
-      const response = await projectsAPI.getProjectById(id as string);
+      const response = await projectsAPI.getProjectById(projectId);
       console.log('Edit page - Project response:', response.data);
       
       // The backend returns the project directly, not wrapped in a project property
@@ -87,11 +102,17 @@ export default function EditProject() {
         featured: project.featured,
       });
       
+      // Load testimonial
+      setTestimonial(project.testimonial || {
+        name: '',
+        role: '',
+        image: '',
+        quote: ''
+      });
+      
       // Extract URLs and IDs from ProjectImage objects
       const imageUrls = project.images?.map(img => img.url) || [];
-      const imageIds = project.images?.map((_, index) => index.toString()) || [];
       setExistingImages(imageUrls);
-      setExistingImageIds(imageIds);
       console.log('Edit page - Project loaded successfully');
     } catch (error: any) {
       console.error('Edit page - Fetch project error:', error);
@@ -105,20 +126,20 @@ export default function EditProject() {
         // Don't redirect, let user stay on page
       }
     }
-  }, [id, router]);
+  }, [projectId, router]);
 
   useEffect(() => {
     const init = async () => {
       setInitialLoading(true);
       const isAuthenticated = await checkAuth();
-      if (isAuthenticated && id) {
+      if (isAuthenticated && projectId) {
         await fetchProject();
       }
       setInitialLoading(false);
     };
     
     init();
-  }, [checkAuth, fetchProject, id]);
+  }, [checkAuth, fetchProject, projectId]);
 
   // Show loading state while initializing
   if (initialLoading) {
@@ -146,6 +167,9 @@ export default function EditProject() {
         }
       });
 
+      // Append testimonial data
+      formDataToSend.append('testimonial', JSON.stringify(testimonial));
+
       // Append remaining existing images
       existingImages.forEach((imageUrl) => {
         formDataToSend.append('existingImages', imageUrl);
@@ -161,11 +185,14 @@ export default function EditProject() {
         formDataToSend.append('images', image);
       });
 
-      await projectsAPI.updateProject(id as string, formDataToSend);
-      toast.success('Project updated successfully');
+      const response = await projectsAPI.updateProject(projectId, formDataToSend);
+      console.log('Project updated successfully:', response);
+      toast.success('Project updated successfully!');
       router.push('/admin/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Update failed');
+      console.error('Project update error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to update project';
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -210,10 +237,8 @@ export default function EditProject() {
   const removeExistingImage = (index: number) => {
     const imageToRemove = existingImages[index];
     const updatedImages = existingImages.filter((_, i) => i !== index);
-    const updatedIds = existingImageIds.filter((_, i) => i !== index);
     
     setExistingImages(updatedImages);
-    setExistingImageIds(updatedIds);
     setRemovedExistingImages(prev => [...prev, imageToRemove]);
     toast.success('Image removed from selection');
   };
@@ -243,7 +268,7 @@ export default function EditProject() {
                   required
                   value={formData.title}
                   onChange={handleChange}
-                  className="w-full border px-4 py-3 rounded-lg"
+                  className="w-full border px-4 py-3 rounded-lg text-gray-900"
                 />
               </div>
               <div>
@@ -252,7 +277,7 @@ export default function EditProject() {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className="w-full border px-4 py-3 rounded-lg"
+                  className="w-full border px-4 py-3 rounded-lg text-gray-900"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>{cat}</option>
@@ -267,19 +292,35 @@ export default function EditProject() {
                 name="shortDescription"
                 value={formData.shortDescription}
                 onChange={handleChange}
-                className="w-full border px-4 py-3 rounded-lg"
+                className="w-full border px-4 py-3 rounded-lg text-gray-900"
               />
             </div>
 
             <div>
               <label className="block mb-2 font-medium text-navy">Full Description</label>
-              <textarea
-                name="description"
-                value={formData.description}
-                onChange={handleChange}
-                rows={6}
-                className="w-full border px-4 py-3 rounded-lg"
-              />
+              <div className="border border-gray-300 rounded-lg bg-white">
+                <ReactQuill
+                  theme="snow"
+                  value={formData.description}
+                  onChange={(value) => setFormData(prev => ({ ...prev, description: value }))}
+                  placeholder="Write a detailed project description..."
+                  modules={{
+                    toolbar: [
+                      [{ 'header': [1, 2, 3, false] }],
+                      ['bold', 'italic', 'underline', 'strike'],
+                      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                      [{ 'color': [] }, { 'background': [] }],
+                      ['link', 'image'],
+                      ['clean']
+                    ],
+                  }}
+                  style={{ height: '200px' }}
+                  className="text-gray-900"
+                />
+              </div>
+              <p className="text-sm text-gray-500 mt-1">
+                Use the toolbar above to format your description
+              </p>
             </div>
 
             <div>
@@ -289,8 +330,57 @@ export default function EditProject() {
                 name="technologies"
                 value={formData.technologies}
                 onChange={handleChange}
-                className="w-full border px-4 py-3 rounded-lg"
+                className="w-full border px-4 py-3 rounded-lg text-gray-900"
               />
+            </div>
+
+            {/* Testimonial Section */}
+            <div className="border-t pt-8">
+              <h3 className="text-lg font-medium text-navy mb-4">Testimonial (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-navy mb-2">
+                    Author Name
+                  </label>
+                  <input
+                    type="text"
+                    value={testimonial.name}
+                    onChange={(e) => setTestimonial(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
+                    placeholder="Client or reviewer name"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-navy mb-2">
+                    Role/Company
+                  </label>
+                  <input
+                    type="text"
+                    value={testimonial.role}
+                    onChange={(e) => setTestimonial(prev => ({ ...prev, role: e.target.value }))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors text-gray-900"
+                    placeholder="CEO, Company Name"
+                  />
+                </div>
+              </div>
+              
+              <div className="mt-6">
+                <label className="block text-sm font-medium text-navy mb-2">
+                  Testimonial Quote
+                </label>
+                <textarea
+                  value={testimonial.quote}
+                  onChange={(e) => setTestimonial(prev => ({ ...prev, quote: e.target.value }))}
+                  rows={4}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors resize-none text-gray-900"
+                  placeholder="What did they say about your work?"
+                  maxLength={500}
+                />
+                <p className="text-sm text-gray-500 mt-1">
+                  {testimonial.quote.length}/500 characters
+                </p>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -301,7 +391,7 @@ export default function EditProject() {
                   name="client"
                   value={formData.client}
                   onChange={handleChange}
-                  className="w-full border px-4 py-3 rounded-lg"
+                  className="w-full border px-4 py-3 rounded-lg text-gray-900"
                 />
               </div>
               <div>
@@ -394,7 +484,7 @@ export default function EditProject() {
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full border px-4 py-3 rounded-lg"
+                  className="w-full border px-4 py-3 rounded-lg text-gray-900"
                 >
                   <option value="draft">Draft</option>
                   <option value="published">Published</option>
