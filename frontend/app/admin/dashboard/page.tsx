@@ -103,35 +103,34 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-soft-white">
       <ToastContainer />
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex justify-between items-center">
-              <div>
-                <h1 className="text-2xl font-serif text-navy">Admin Dashboard</h1>
-                <p className="text-gray-600">Welcome back, {user?.username}</p>
-              </div>
-              <div className="flex items-center space-x-4">
-                <Link
-                  href="/"
-                  className="text-gray-600 hover:text-navy transition-colors"
-                >
-                  View Site
-                </Link>
-                <button
-                  onClick={handleLogout}
-                  className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
+      {/* Full-width header, edge-to-edge */}
+      <header className="w-full bg-white shadow-sm border-b px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex justify-between items-center max-w-none">
+          <div>
+            <h1 className="text-2xl font-serif text-navy">Admin Dashboard</h1>
+            <p className="text-gray-600">Welcome back, {user?.username}</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/"
+              className="text-gray-600 hover:text-navy transition-colors"
+            >
+              View Site
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content, edge-to-edge with responsive padding and max width */}
+      <main className="w-full max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-0">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <motion.div
@@ -282,7 +281,7 @@ export default function AdminDashboard() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
   );
 }
