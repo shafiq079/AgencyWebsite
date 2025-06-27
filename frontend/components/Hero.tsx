@@ -44,7 +44,7 @@ const Hero = ({
         >
           <img
             src={backgroundImage}
-            alt=""
+            alt="Background"
             className="w-full h-full object-cover"
           />
         </motion.div>
