@@ -62,10 +62,20 @@ app.use('/uploads', require('cors')({
     }
   },
   credentials: true
-}), express.static(uploadsPath, {
+}), (req, res, next) => {
+  // Log image requests for debugging
+  console.log('Image request:', {
+    path: req.path,
+    fullUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
+    userAgent: req.get('User-Agent'),
+    origin: req.get('Origin')
+  });
+  next();
+}, express.static(uploadsPath, {
   setHeaders: (res, path) => {
     res.set('Cross-Origin-Resource-Policy', 'cross-origin');
     res.set('Access-Control-Allow-Origin', '*');
+    console.log('Serving static file:', path);
   }
 }));
 
@@ -92,7 +102,8 @@ app.get('/api/test-images', (req, res) => {
         uploadsPath,
         projectsPath,
         fileCount: files.length,
-        files: files.slice(0, 5) // Show first 5 files
+        files: files.slice(0, 5), // Show first 5 files
+        sampleUrls: files.slice(0, 3).map(file => `/uploads/projects/${file}`)
       });
     } else {
       res.json({ 
@@ -104,6 +115,40 @@ app.get('/api/test-images', (req, res) => {
   } catch (error) {
     res.status(500).json({ 
       message: 'Error accessing image directory',
+      error: error.message
+    });
+  }
+});
+
+// List all uploaded images
+app.get('/api/list-images', (req, res) => {
+  const uploadsPath = path.resolve(__dirname, 'uploads');
+  const projectsPath = path.join(uploadsPath, 'projects');
+  
+  try {
+    if (fs.existsSync(projectsPath)) {
+      const files = fs.readdirSync(projectsPath);
+      const imageUrls = files.map(file => ({
+        filename: file,
+        url: `/uploads/projects/${file}`,
+        fullUrl: `${req.protocol}://${req.get('host')}/uploads/projects/${file}`
+      }));
+      
+      res.json({ 
+        message: 'Images found',
+        count: files.length,
+        images: imageUrls
+      });
+    } else {
+      res.json({ 
+        message: 'No images found',
+        uploadsPath,
+        projectsPath
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Error listing images',
       error: error.message
     });
   }

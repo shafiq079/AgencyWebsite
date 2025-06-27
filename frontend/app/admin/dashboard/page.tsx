@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { auth, User } from '@/lib/auth';
-import { projectsAPI, getImageUrl } from '@/lib/api';
+import { projectsAPI, getImageUrl, handleImageError } from '@/lib/api';
 import { Project } from '@/types/project';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -227,6 +227,11 @@ export default function AdminDashboard() {
                               src={getImageUrl(project.featuredImage)}
                               alt={project.title}
                               crossOrigin="anonymous"
+                              onError={(e) => {
+                                handleImageError(e);
+                                // Set a placeholder
+                                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBmaWxsPSIjRjNGNEY2Ii8+CjxwYXRoIGQ9Ik0yMCAyNkMyMi43NjE0IDI2IDI1IDIzLjc2MTQgMjUgMjFDMjUgMTguMjM4NiAyMi43NjE0IDE2IDIwIDE2QzE3LjIzODYgMTYgMTUgMTguMjM4NiAxNSAyMUMxNSAyMy43NjE0IDE3LjIzODYgMjYgMjAgMjZaIiBmaWxsPSIjOUI5QkEwIi8+CjxwYXRoIGQ9Ik0yOCAyOEwyOCAyNkwyNiAyNkwyNiAyOEgyOFoiIGZpbGw9IiM5QjlBQTAiLz4KPC9zdmc+';
+                              }}
                             />
                           ) : (
                             <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">

@@ -39,6 +39,20 @@ export const getImageUrl = (imagePath: string): string => {
   return fullUrl;
 };
 
+// Utility function to handle image loading errors
+export const handleImageError = (event: React.SyntheticEvent<HTMLImageElement, Event>, fallbackSrc?: string) => {
+  console.error('Image failed to load:', {
+    src: event.currentTarget.src
+  });
+  
+  if (fallbackSrc) {
+    event.currentTarget.src = fallbackSrc;
+  } else {
+    // Set a placeholder or hide the image
+    event.currentTarget.style.display = 'none';
+  }
+};
+
 // Create axios instance
 const api = axios.create({
   baseURL: API_URL,
