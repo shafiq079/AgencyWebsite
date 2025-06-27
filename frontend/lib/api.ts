@@ -18,13 +18,13 @@ const getBaseUrl = (): string => {
 export const getImageUrl = (imagePath: string): string => {
   if (!imagePath) return '';
   
-  // If it's already a full URL, return as is
+  // If it's already a full URL (like Cloudinary), return as is
   if (imagePath.startsWith('http')) {
     console.log('Image URL (already full):', imagePath);
     return imagePath;
   }
   
-  // Construct the full URL using the base URL
+  // For local storage (development), construct the full URL
   const baseUrl = getBaseUrl();
   const fullUrl = `${baseUrl}${imagePath}`;
   

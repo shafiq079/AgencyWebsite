@@ -10,12 +10,14 @@ const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const router = express.Router();
 
+// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+// Configure Cloudinary storage
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
@@ -266,12 +268,20 @@ router.delete('/:id', auth, async (req, res) => {
       return res.status(404).json({ message: 'Project not found or unauthorized' });
     }
 
-    project.images.forEach(image => {
-      const imagePath = path.join(__dirname, '../', image.url);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
+    // Delete images from Cloudinary
+    for (const image of project.images) {
+      try {
+        // Extract public_id from Cloudinary URL
+        const urlParts = image.url.split('/');
+        const filename = urlParts[urlParts.length - 1].split('.')[0];
+        const publicId = `projects/${filename}`;
+        
+        await cloudinary.uploader.destroy(publicId);
+      } catch (error) {
+        console.error('Error deleting image from Cloudinary:', error);
+        // Continue with other images even if one fails
       }
-    });
+    }
 
     await Project.findByIdAndDelete(req.params.id);
 
