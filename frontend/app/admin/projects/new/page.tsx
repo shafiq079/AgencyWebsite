@@ -1,76 +1,84 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { auth } from '@/lib/auth';
+import Image from 'next/image';
+import { auth, User } from '@/lib/auth';
 import { projectsAPI } from '@/lib/api';
-import { ProjectFormData } from '@/types/project';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 export default function NewProject() {
-  const [formData, setFormData] = useState<ProjectFormData>({
-    title: '',
-    description: '',
-    shortDescription: '',
-    category: 'Branding',
-    technologies: '',
-    client: '',
-    year: new Date().getFullYear(),
-    status: 'draft',
-    featured: false,
-    images: [],
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(false);
   const [imagePreview, setImagePreview] = useState<string[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const router = useRouter();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
+  const [formData, setFormData] = useState({
+    title: '',
+    category: 'Branding',
+    client: '',
+    year: new Date().getFullYear(),
+    shortDescription: '',
+    description: '',
+    technologies: '',
+    status: 'draft',
+    featured: false,
+  });
 
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     if (!auth.isAuthenticated()) {
       router.push('/admin/login');
       return;
     }
 
     try {
-      const user = await auth.getCurrentUser();
-      if (!user || user.role !== 'admin') {
+      const currentUser = await auth.getCurrentUser();
+      if (!currentUser || currentUser.role !== 'admin') {
         router.push('/admin/login');
+        return;
       }
+      setUser(currentUser);
     } catch (error) {
       router.push('/admin/login');
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    
+    if (selectedFiles.length < 3) {
+      toast.error('Please upload at least 3 images');
+      return;
+    }
 
+    setLoading(true);
     try {
       const formDataToSend = new FormData();
       
-      // Append text fields
-      Object.keys(formData).forEach(key => {
+      // Append form data
+      Object.entries(formData).forEach(([key, value]) => {
         if (key !== 'images') {
-          formDataToSend.append(key, formData[key as keyof ProjectFormData] as string);
+          formDataToSend.append(key, value as string);
         }
       });
 
-      // Append images
-      formData.images.forEach(image => {
-        formDataToSend.append('images', image);
+      // Append image files
+      selectedFiles.forEach((file) => {
+        formDataToSend.append('images', file);
       });
-      formDataToSend.append('slug', formData.title.toLowerCase().replace(/[^a-z0-9]+/g, '-'));
 
       await projectsAPI.createProject(formDataToSend);
-      toast.success('Project created successfully!');
+      toast.success('Project created successfully');
       router.push('/admin/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create project');
+      toast.error(error.response?.data?.message || 'Creation failed');
     } finally {
       setLoading(false);
     }
@@ -78,7 +86,6 @@ export default function NewProject() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
@@ -89,10 +96,25 @@ export default function NewProject() {
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
-    setFormData(prev => ({ ...prev, images: files }));
+    
+    // Add new files to existing selection
+    const updatedFiles = [...selectedFiles, ...files];
+    setSelectedFiles(updatedFiles);
 
-    // Create preview URLs
-    const previewUrls = files.map(file => URL.createObjectURL(file));
+    // Create preview URLs for all files
+    const previewUrls = updatedFiles.map(file => URL.createObjectURL(file));
+    setImagePreview(previewUrls);
+    
+    // Clear the input value to allow selecting the same file again
+    e.target.value = '';
+  };
+
+  const removeImage = (index: number) => {
+    const updatedFiles = selectedFiles.filter((_, i) => i !== index);
+    setSelectedFiles(updatedFiles);
+    
+    // Update preview URLs
+    const previewUrls = updatedFiles.map(file => URL.createObjectURL(file));
     setImagePreview(previewUrls);
   };
 
@@ -251,7 +273,7 @@ export default function NewProject() {
             {/* Images */}
             <div>
               <label htmlFor="images" className="block text-sm font-medium text-navy mb-2">
-                Project Images *
+                Project Images * ({selectedFiles.length} selected)
               </label>
               <input
                 type="file"
@@ -263,19 +285,35 @@ export default function NewProject() {
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-copper focus:border-transparent transition-colors"
               />
               <p className="text-sm text-gray-500 mt-1">
-                Upload at least 3 high-quality images (JPEG, PNG, WebP)
+                Upload at least 3 high-quality images (JPEG, PNG, WebP). You can select multiple files or add them one by one.
               </p>
               
               {imagePreview.length > 0 && (
-                <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {imagePreview.map((url, index) => (
-                    <img
-                      key={index}
-                      src={url}
-                      alt={`Preview ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                  ))}
+                <div className="mt-4">
+                  <h4 className="text-sm font-medium text-navy mb-3">Selected Images ({selectedFiles.length})</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {imagePreview.map((url, index) => (
+                      <div key={index} className="relative group">
+                        <Image
+                          src={url}
+                          alt={`Preview ${index + 1}`}
+                          width={300}
+                          height={200}
+                          className="w-full h-32 object-cover rounded-lg"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          ×
+                        </button>
+                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                          {selectedFiles[index]?.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>

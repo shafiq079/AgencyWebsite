@@ -3,6 +3,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { Inter, DM_Serif_Display } from 'next/font/google';
 import LayoutWrapper from './layout-wrapper';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -45,7 +46,9 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
       <body className="antialiased">
-        <LayoutWrapper>{children}</LayoutWrapper>
+        <ErrorBoundary>
+          <LayoutWrapper>{children}</LayoutWrapper>
+        </ErrorBoundary>
       </body>
     </html>
   );

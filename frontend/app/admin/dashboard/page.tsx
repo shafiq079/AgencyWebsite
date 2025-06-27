@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { auth, User } from '@/lib/auth';
 import { projectsAPI } from '@/lib/api';
 import { Project } from '@/types/project';
@@ -21,16 +22,7 @@ export default function AdminDashboard() {
   });
   const router = useRouter();
 
-  useEffect(() => {
-  const init = async () => {
-    await checkAuth();
-    await fetchProjects();
-  };
-  init();
-}, []);
-
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     if (!auth.isAuthenticated()) {
       router.push('/admin/login');
       return;
@@ -46,15 +38,18 @@ export default function AdminDashboard() {
     } catch (error) {
       router.push('/admin/login');
     }
-  };
+  }, [router]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
       const response = await projectsAPI.getAllProjects({ limit: 10 });
       const projectsData = response.data.projects;
+      console.log('Dashboard - Fetched projects:', projectsData);
+      console.log('Dashboard - Sample project featuredImage:', projectsData[0]?.featuredImage);
+      
       setProjects(projectsData);
-      console.log('Fetched projects:', projectsData);
+      
       // Calculate stats
       setStats({
         total: projectsData.length,
@@ -62,11 +57,20 @@ export default function AdminDashboard() {
         drafts: projectsData.filter((p: Project) => p.status === 'draft').length,
       });
     } catch (error) {
+      console.error('Dashboard - Error fetching projects:', error);
       toast.error('Failed to fetch projects');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    const init = async () => {
+      await checkAuth();
+      await fetchProjects();
+    };
+    init();
+  }, [checkAuth, fetchProjects]);
 
   const handleLogout = async () => {
     await auth.logout();
@@ -196,15 +200,21 @@ export default function AdminDashboard() {
                   <tr key={project._id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <img
-                          className="h-10 w-10 rounded-lg object-cover"
-                          src={project.featuredImage.startsWith('http') 
-                            ? project.featuredImage 
-                            : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${project.featuredImage}`
-                          }
-                          crossOrigin="anonymous"
-                          alt={project.title}
-                        />
+                        {project.featuredImage ? (
+                          <img
+                            className="h-10 w-10 rounded-lg object-cover"
+                            src={project.featuredImage?.startsWith('http')
+                              ? project.featuredImage
+                              : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${project.featuredImage}`
+                            }
+                            alt={project.title}
+                            crossOrigin="anonymous"
+                          />
+                        ) : (
+                          <div className="h-10 w-10 rounded-lg bg-gray-200 flex items-center justify-center">
+                            <span className="text-gray-500 text-xs">No img</span>
+                          </div>
+                        )}
                         <div className="ml-4">
                           <div className="text-sm font-medium text-gray-900">
                             {project.title}

@@ -1,5 +1,3 @@
-// app/layout-wrapper.tsx
-
 'use client';
 
 import { usePathname } from 'next/navigation';
@@ -7,17 +5,17 @@ import Navigation from '@/components/Navigation';
 import Footer from '@/components/Footer';
 import PageTransition from '@/components/PageTransition';
 
-export default function LayoutWrapper({ children }: { children: React.ReactNode }) {
+export default function LayoutWrapperClient({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const isAdminPage = pathname?.startsWith('/admin');
+  const isAdminRoute = pathname?.startsWith('/admin');
 
   return (
     <>
-      {!isAdminPage && <Navigation />}
+      {!isAdminRoute && <Navigation />}
       <PageTransition>
         <main>{children}</main>
       </PageTransition>
-      {!isAdminPage && <Footer />}
+      {!isAdminRoute && <Footer />}
     </>
   );
-}
+} 

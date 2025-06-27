@@ -232,17 +232,39 @@ router.put('/:id', auth, upload.array('images', 10), [
       }
     });
 
+    // Handle existing images (keep only the ones that weren't removed)
+    const existingImages = Array.isArray(req.body.existingImages) ? req.body.existingImages : [req.body.existingImages].filter(Boolean);
+    const removedImages = Array.isArray(req.body.removedImages) ? req.body.removedImages : [req.body.removedImages].filter(Boolean);
+    
+    // Filter out removed images from existing images
+    const remainingExistingImages = project.images.filter(img => 
+      existingImages.includes(img.url) && !removedImages.includes(img.url)
+    );
+
+    // Delete removed image files from server
+    removedImages.forEach(imageUrl => {
+      const imagePath = path.join(__dirname, '../', imageUrl);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    });
+
+    // Add new images
+    let newImages = [];
     if (req.files && req.files.length > 0) {
-      const newImages = req.files.map(file => ({
+      newImages = req.files.map(file => ({
         url: `/uploads/projects/${file.filename}`,
         alt: `${project.title} - Project Image`,
         caption: ''
       }));
+    }
 
-      project.images = [...project.images, ...newImages];
-      if (!project.featuredImage) {
-        project.featuredImage = newImages[0].url;
-      }
+    // Combine remaining existing images with new images
+    project.images = [...remainingExistingImages, ...newImages];
+    
+    // Update featured image if needed
+    if (project.images.length > 0 && !project.featuredImage) {
+      project.featuredImage = project.images[0].url;
     }
 
     await project.save();

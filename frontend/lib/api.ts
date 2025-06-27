@@ -9,6 +9,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000, // 10 second timeout
 });
 
 // Add auth token to requests
@@ -24,6 +25,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    console.error('API Error:', error);
     if (error.response?.status === 401) {
       Cookies.remove('auth-token');
       window.location.href = '/admin/login';
@@ -48,15 +50,51 @@ export const authAPI = {
 // Projects API
 export const projectsAPI = {
   // Public endpoints
-  getProjects: (params?: { category?: string; featured?: boolean; limit?: number; page?: number }) =>
-    api.get('/projects', { params }),
+  getProjects: async (params?: { category?: string; featured?: boolean; limit?: number; page?: number }) => {
+    try {
+      const response = await api.get('/projects', { params });
+      return response;
+    } catch (error) {
+      console.error('Error fetching projects:', error);
+      // Return empty data structure to prevent undefined errors
+      return {
+        data: {
+          projects: [],
+          total: 0,
+          page: 1,
+          limit: 10
+        }
+      };
+    }
+  },
   
-  getProject: (slug: string) =>
-    api.get(`/projects/${slug}`),
+  getProject: async (slug: string) => {
+    try {
+      const response = await api.get(`/projects/${slug}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching project:', error);
+      throw error;
+    }
+  },
   
   // Admin endpoints
-  getAllProjects: (params?: { status?: string; category?: string; limit?: number; page?: number }) =>
-    api.get('/projects/admin/all', { params }),
+  getAllProjects: async (params?: { status?: string; category?: string; limit?: number; page?: number }) => {
+    try {
+      const response = await api.get('/projects/admin/all', { params });
+      return response;
+    } catch (error) {
+      console.error('Error fetching all projects:', error);
+      return {
+        data: {
+          projects: [],
+          total: 0,
+          page: 1,
+          limit: 10
+        }
+      };
+    }
+  },
   
   createProject: (formData: FormData) =>
     api.post('/projects', formData, {
@@ -67,10 +105,17 @@ export const projectsAPI = {
     api.put(`/projects/${id}`, formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
-    getProjectById: (id: string) =>
-  api.get(`/projects/admin/${id}`),
+    
+  getProjectById: async (id: string) => {
+    try {
+      const response = await api.get(`/projects/admin/${id}`);
+      return response;
+    } catch (error) {
+      console.error('Error fetching project by ID:', error);
+      throw error;
+    }
+  },
 
-  
   deleteProject: (id: string) =>
     api.delete(`/projects/${id}`),
 };

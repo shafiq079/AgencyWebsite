@@ -3,8 +3,8 @@
 import Hero from '@/components/Hero';
 import AnimatedSection from '@/components/AnimatedSection';
 import { motion } from 'framer-motion';
-import { useInView } from 'react-intersection-observer';
-import { useState, useEffect } from 'react';
+import { useInView } from 'framer-motion';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { projectsAPI } from '@/lib/api';
 import { Project } from '@/types/project';
@@ -13,31 +13,40 @@ export default function Work() {
   const [filter, setFilter] = useState('All');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
-  const [projectsRef, projectsInView] = useInView({
-    triggerOnce: true,
-    threshold: 0.1,
-  });
+  const [error, setError] = useState<string | null>(null);
+  const projectsRef = useRef(null);
+  const projectsInView = useInView(projectsRef, { once: true, margin: "-100px" });
 
   const categories = ['All', 'Branding', 'Digital', 'Print', 'Art Direction', 'Web Design'];
 
-  useEffect(() => {
-    fetchProjects();
-  }, [filter]);
-
-  const fetchProjects = async () => {
+  const fetchProjects = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const response = await projectsAPI.getProjects({
         category: filter === 'All' ? undefined : filter,
         limit: 20
       });
-      setProjects(response.data.projects);
+      
+      // Ensure we have a valid response with projects array
+      if (response?.data?.projects && Array.isArray(response.data.projects)) {
+        setProjects(response.data.projects);
+      } else {
+        console.warn('Invalid projects response:', response);
+        setProjects([]);
+      }
     } catch (error) {
       console.error('Error fetching projects:', error);
+      setError('Failed to load projects');
+      setProjects([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
   return (
     <>
@@ -74,6 +83,18 @@ export default function Work() {
       {/* Projects Grid */}
       <section ref={projectsRef} className="pb-32 bg-soft-white">
         <div className="section-padding container-max">
+          {error && (
+            <div className="text-center py-20">
+              <p className="text-red-600 text-lg mb-4">{error}</p>
+              <button
+                onClick={fetchProjects}
+                className="bg-navy text-white px-6 py-3 rounded-lg hover:bg-copper transition-colors"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+          
           {loading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[...Array(6)].map((_, index) => (
@@ -89,7 +110,7 @@ export default function Work() {
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {projects.map((project, index) => (
+              {projects && projects.length > 0 ? projects.map((project, index) => (
                 <motion.div
                   key={`${project._id}-${filter}`}
                   initial={{ opacity: 0, y: 30 }}
@@ -101,45 +122,43 @@ export default function Work() {
                     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
                       <div className="relative overflow-hidden">
                         <img
-                          src={project.featuredImage.startsWith('http')
+                          src={project.featuredImage?.startsWith('http')
                             ? project.featuredImage
                             : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${project.featuredImage}`
                           }
                           crossOrigin="anonymous"
-                          alt={project.title}
+                          alt={project.title || 'Project'}
                           className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                           <span className="text-white font-medium">View Project</span>
                         </div>
                         <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium text-navy">
-                          {project.year}
+                          {project.year || '2024'}
                         </div>
                       </div>
 
                       <div className="p-6">
                         <div className="flex items-center justify-between mb-3">
                           <span className="text-copper text-sm font-medium tracking-wider uppercase">
-                            {project.category}
+                            {project.category || 'Design'}
                           </span>
                         </div>
                         <h3 className="text-xl font-serif text-navy mb-2 group-hover:text-copper transition-colors">
-                          {project.title}
+                          {project.title || 'Untitled Project'}
                         </h3>
                         <p className="text-gray-600 text-sm leading-relaxed">
-                          {project.shortDescription}
+                          {project.shortDescription || 'Project description coming soon.'}
                         </p>
                       </div>
                     </div>
                   </Link>
                 </motion.div>
-              ))}
-            </div>
-          )}
-
-          {!loading && projects.length === 0 && (
-            <div className="text-center py-20">
-              <p className="text-gray-600 text-lg">No projects found for the selected category.</p>
+              )) : (
+                <div className="text-center py-20 col-span-full">
+                  <p className="text-gray-600 text-lg">No projects found for the selected category.</p>
+                </div>
+              )}
             </div>
           )}
         </div>

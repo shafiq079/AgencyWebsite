@@ -2,9 +2,17 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const pathname = usePathname();
+  const isAdminRoute = pathname.startsWith('/admin');
+
+  // Don't render footer for admin routes
+  if (isAdminRoute) {
+    return null;
+  }
 
   return (
     <footer className="bg-navy text-soft-white">
