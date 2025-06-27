@@ -48,38 +48,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static file serving for uploads
-const uploadsPath = path.resolve(__dirname, 'uploads');
-app.use('/uploads', require('cors')({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}), (req, res, next) => {
-  // Log image requests for debugging
-  console.log('Image request:', {
-    path: req.path,
-    fullUrl: `${req.protocol}://${req.get('host')}${req.originalUrl}`,
-    userAgent: req.get('User-Agent'),
-    origin: req.get('Origin')
-  });
-  next();
-}, express.static(uploadsPath, {
-  setHeaders: (res, path) => {
-    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
-    res.set('Access-Control-Allow-Origin', '*');
-    console.log('Serving static file:', path);
-  }
-}));
-
-
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);

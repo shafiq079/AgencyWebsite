@@ -5,41 +5,27 @@ const fs = require('fs');
 const { body, validationResult } = require('express-validator');
 const Project = require('../models/Project');
 const { auth } = require('../middleware/auth');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 const router = express.Router();
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadPath = path.join(__dirname, '../uploads/projects');
-    if (!fs.existsSync(uploadPath)) {
-      fs.mkdirSync(uploadPath, { recursive: true });
-    }
-    cb(null, uploadPath);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
-  }
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const upload = multer({
-  storage,
-  limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024 // 5MB
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'projects',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    transformation: [{ width: 1200, height: 1200, crop: 'limit' }],
   },
-  fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-
-    if (mimetype && extname) {
-      return cb(null, true);
-    } else {
-      cb(new Error('Only image files are allowed'));
-    }
-  }
 });
+
+const upload = multer({ storage });
 
 // Get all published projects (public)
 router.get('/', async (req, res) => {
@@ -165,7 +151,7 @@ router.post('/', auth, upload.array('images', 10), [
     } = req.body;
 
     const images = req.files?.map(file => ({
-      url: `/uploads/projects/${file.filename}`,
+      url: file.path, // Cloudinary URL
       alt: `${title} - Project Image`,
       caption: ''
     })) || [];
@@ -241,19 +227,11 @@ router.put('/:id', auth, upload.array('images', 10), [
       existingImages.includes(img.url) && !removedImages.includes(img.url)
     );
 
-    // Delete removed image files from server
-    removedImages.forEach(imageUrl => {
-      const imagePath = path.join(__dirname, '../', imageUrl);
-      if (fs.existsSync(imagePath)) {
-        fs.unlinkSync(imagePath);
-      }
-    });
-
-    // Add new images
+    // Add new images from Cloudinary
     let newImages = [];
     if (req.files && req.files.length > 0) {
       newImages = req.files.map(file => ({
-        url: `/uploads/projects/${file.filename}`,
+        url: file.path, // Cloudinary URL
         alt: `${project.title} - Project Image`,
         caption: ''
       }));
@@ -263,7 +241,7 @@ router.put('/:id', auth, upload.array('images', 10), [
     project.images = [...remainingExistingImages, ...newImages];
     
     // Update featured image if needed
-    if (project.images.length > 0 && !project.featuredImage) {
+    if (project.images.length > 0) {
       project.featuredImage = project.images[0].url;
     }
 
