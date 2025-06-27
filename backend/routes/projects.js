@@ -141,7 +141,6 @@ router.post('/', auth, upload.array('images', 10), [
 
     const {
       title,
-      slug,
       description,
       shortDescription,
       category,
@@ -162,7 +161,6 @@ router.post('/', auth, upload.array('images', 10), [
 
     const project = new Project({
       title,
-      slug,
       description,
       shortDescription,
       category,
