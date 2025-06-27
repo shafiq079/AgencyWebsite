@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
 import { auth, User } from '@/lib/auth';
-import { projectsAPI } from '@/lib/api';
+import { projectsAPI, getImageUrl } from '@/lib/api';
 import { Project } from '@/types/project';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -203,10 +203,7 @@ export default function AdminDashboard() {
                         {project.featuredImage ? (
                           <img
                             className="h-10 w-10 rounded-lg object-cover"
-                            src={project.featuredImage?.startsWith('http')
-                              ? project.featuredImage
-                              : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${project.featuredImage}`
-                            }
+                            src={getImageUrl(project.featuredImage)}
                             alt={project.title}
                             crossOrigin="anonymous"
                           />

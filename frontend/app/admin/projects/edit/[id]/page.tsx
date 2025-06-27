@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import { auth, User } from '@/lib/auth';
-import { projectsAPI } from '@/lib/api';
+import { projectsAPI, getImageUrl } from '@/lib/api';
 import { Project } from '@/types/project';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -337,10 +337,7 @@ export default function EditProject() {
                     {existingImages.map((url, index) => (
                       <div key={`existing-${index}`} className="relative group">
                         <img
-                          src={url.startsWith('http') 
-                            ? url 
-                            : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${url}`
-                          }
+                          src={getImageUrl(url)}
                           alt={`Existing image ${index + 1}`}
                           className="w-full h-32 object-cover rounded-lg"
                           crossOrigin="anonymous"

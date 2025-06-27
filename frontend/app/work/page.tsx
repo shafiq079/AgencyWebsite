@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
-import { projectsAPI } from '@/lib/api';
+import { projectsAPI, getImageUrl } from '@/lib/api';
 import { Project } from '@/types/project';
 
 export default function Work() {
@@ -122,10 +122,7 @@ export default function Work() {
                     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
                       <div className="relative overflow-hidden">
                         <img
-                          src={project.featuredImage?.startsWith('http')
-                            ? project.featuredImage
-                            : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${project.featuredImage}`
-                          }
+                          src={getImageUrl(project.featuredImage)}
                           crossOrigin="anonymous"
                           alt={project.title || 'Project'}
                           className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"

@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import AnimatedSection from '@/components/AnimatedSection';
-import { projectsAPI } from '@/lib/api';
+import { projectsAPI, getImageUrl } from '@/lib/api';
 import { Project } from '@/types/project';
 
 export default function ProjectDetail() {
@@ -60,12 +60,6 @@ export default function ProjectDetail() {
     );
   }
 
-  const getImageUrl = (url: string) => {
-    return url.startsWith('http') 
-      ? url 
-      : `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${url}`;
-  };
-
   return (
     <>
       {/* Hero Section */}
@@ -77,12 +71,14 @@ export default function ProjectDetail() {
             transition={{ duration: 1.5, ease: 'easeOut' }}
             className="w-full h-full"
           >
-            <img
-              src={getImageUrl(project.featuredImage)}
-              alt={project.title}
-              crossOrigin='anonymous'
-              className="w-full h-full object-cover blur-sm"
-            />
+            <div className="relative w-full h-96 md:h-[500px] overflow-hidden rounded-2xl">
+              <img
+                src={getImageUrl(project.featuredImage)}
+                crossOrigin="anonymous"
+                alt={project.title}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </motion.div>
           <div className="absolute inset-0 bg-navy/40" />
         </div>
@@ -187,7 +183,7 @@ export default function ProjectDetail() {
       </section>
 
       {/* Project Gallery */}
-      {project.images.length > 0 && (
+      {project.images && project.images.length > 0 && (
         <section className="py-32 bg-soft-white">
           <div className="section-padding container-max">
             <AnimatedSection className="text-center mb-16">
@@ -196,24 +192,26 @@ export default function ProjectDetail() {
               </h2>
             </AnimatedSection>
 
-            <div className="space-y-16">
-              {project.images.map((image, index) => (
-                <AnimatedSection key={index} delay={index * 0.1}>
-                  <div className="relative">
+            <div className="mt-12">
+              <h3 className="text-2xl font-bold text-navy mb-6">Project Gallery</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {project.images.map((image, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="relative overflow-hidden rounded-lg"
+                  >
                     <img
                       src={getImageUrl(image.url)}
-                      alt={image.alt}
-                      className="w-full h-auto rounded-lg shadow-lg"
-                      crossOrigin='anonymous'
+                      crossOrigin="anonymous"
+                      alt={image.alt || `${project.title} - Image ${index + 1}`}
+                      className="w-full h-64 object-cover transition-transform duration-300 hover:scale-105"
                     />
-                    {image.caption && (
-                      <p className="text-center text-gray-600 mt-4 italic">
-                        {image.caption}
-                      </p>
-                    )}
-                  </div>
-                </AnimatedSection>
-              ))}
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </div>
         </section>

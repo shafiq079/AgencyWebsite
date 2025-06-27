@@ -1,22 +1,52 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Frontend Application
+
+This is the frontend application for the portfolio project with admin panel.
+
+## Environment Setup
+
+### Development
+Create a `.env.local` file in the frontend directory with:
+```
+NEXT_PUBLIC_API_URL=http://localhost:5000/api
+```
+
+### Production (Vercel)
+Set the following environment variable in your Vercel project settings:
+```
+NEXT_PUBLIC_API_URL=https://your-backend-app.onrender.com/api
+```
+
+Replace `your-backend-app.onrender.com` with your actual Render backend URL.
 
 ## Getting Started
 
-First, run the development server:
-
+1. Install dependencies:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun run dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Set up environment variables (see above)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Run the development server:
+```bash
+npm run dev
+```
+
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## Build for Production
+
+```bash
+npm run build
+```
+
+## Deployment
+
+The application is configured for deployment on Vercel. Make sure to:
+
+1. Set the `NEXT_PUBLIC_API_URL` environment variable in Vercel
+2. Ensure your backend is deployed and accessible
+3. Configure CORS on your backend to allow requests from your Vercel domain
 
 This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
 
