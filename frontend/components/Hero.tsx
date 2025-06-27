@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import Image from 'next/image';
 
 interface HeroProps {
   title: string;
@@ -42,9 +43,11 @@ const Hero = ({
           transition={{ duration: 1.5, ease: 'easeOut' }}
           className="w-full h-full"
         >
-          <img
+          <Image
             src={backgroundImage}
             alt="Background"
+            width={1920}
+            height={1080}
             className="w-full h-full object-cover"
           />
         </motion.div>

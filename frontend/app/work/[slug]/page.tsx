@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import AnimatedSection from '@/components/AnimatedSection';
 import { projectsAPI, getImageUrl } from '@/lib/api';
 import { Project } from '@/types/project';
@@ -71,10 +72,12 @@ export default function ProjectDetail() {
             transition={{ duration: 1.5, ease: 'easeOut' }}
             className="w-full h-full"
           >
-            <img
+            <Image
               src={getImageUrl(project.featuredImage)}
               crossOrigin="anonymous"
               alt={project.title}
+              width={1920}
+              height={1080}
               className="w-full h-full object-cover"
             />
           </motion.div>
@@ -200,7 +203,7 @@ export default function ProjectDetail() {
                     </svg>
                   </div>
                   <blockquote className="text-xl md:text-2xl text-gray-700 italic leading-relaxed mb-6">
-                    "{project.testimonial.quote}"
+                    &ldquo;{project.testimonial.quote}&rdquo;
                   </blockquote>
                   <div>
                     <p className="text-lg font-semibold text-navy">{project.testimonial.name}</p>
@@ -236,10 +239,12 @@ export default function ProjectDetail() {
                     transition={{ delay: index * 0.1 }}
                     className="relative overflow-hidden rounded-lg"
                   >
-                    <img
+                    <Image
                       src={getImageUrl(image.url)}
                       crossOrigin="anonymous"
                       alt={image.alt || `${project.title} - Image ${index + 1}`}
+                      width={400}
+                      height={256}
                       className="w-full h-64 object-cover transition-transform duration-300 hover:scale-105"
                     />
                   </motion.div>

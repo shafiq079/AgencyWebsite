@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useInView } from 'framer-motion';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { projectsAPI, getImageUrl } from '@/lib/api';
 import { Project } from '@/types/project';
 
@@ -121,10 +122,12 @@ export default function Work() {
                   <Link href={`/work/${project.slug}`}>
                     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-xl transition-all duration-500">
                       <div className="relative overflow-hidden">
-                        <img
+                        <Image
                           src={getImageUrl(project.featuredImage)}
                           crossOrigin="anonymous"
                           alt={project.title || 'Project'}
+                          width={400}
+                          height={256}
                           className="w-full h-64 object-cover transition-transform duration-700 group-hover:scale-110"
                         />
                         <div className="absolute inset-0 bg-navy/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
